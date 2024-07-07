@@ -25,17 +25,26 @@ jobs:
         rm go1.22.0.linux-amd64.tar.gz
         sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
 
+    - name: Set version
+      run: |
+        if git describe --tags >/dev/null 2>&1; then
+          echo "VITE_REACT_APP_VERSION=$(git describe --tags)" >> $GITHUB_ENV
+        else
+          echo "VITE_REACT_APP_VERSION=0.0.0" >> $GITHUB_ENV 
+        fi
+
     - name: Build new-api
       run: |
         cd web
         cp package.json package.json.bak
         jq '.resolutions = {"rollup": "npm:@rollup/wasm-node"} | .overrides = {"rollup": "npm:@rollup/wasm-node"}' package.json.bak > package.json
         npm install
-        git describe --tags > VERSION
-        DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) npm run build
+        npm audit fix 
+        DISABLE_ESLINT_PLUGIN='true' npm run build
         cd ..
         go mod download
-        go build -ldflags "-s -w -X 'one-api/common.Version=$(git describe --tags)' -extldflags '-static'" -o new-api
+        go build -ldflags "-s -w -X 'one-api/common.Version=$VITE_REACT_APP_VERSION' -extldflags '-static'" -o new-api
+
 
     - name: Upload artifact
       uses: actions/upload-artifact@main
