@@ -25,7 +25,11 @@ jobs:
         sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     - name: Build new-api
       run: |
-        export LATEST_APP=$(wget -qO- https://api.github.com/repos/Calcium-Ion/new-api/tags | gawk -F '["v]' '/name/{print "v"\$5;exit}')
+        export LATEST_APP=$(wget -qO- https://api.github.com/repos/Calcium-Ion/new-api/tags | gawk -F '["v]' '/name/{print "v"\\\$5;exit}')
+        if [ -z "$LATEST_APP" ]; then
+          echo "No tags found, exiting..."
+          exit 1
+        fi
         git clone -b $LATEST_APP https://github.com/Calcium-Ion/new-api
         cd new-api/web
         cp package.json package.json.bak
@@ -36,6 +40,7 @@ jobs:
         cd ..
         go mod download
         go build -ldflags "-s -w -X 'one-api/common.Version=$(git describe --tags)' -extldflags '-static'" -o new-api
+
     - name: Upload artifact
       uses: actions/upload-artifact@main
       with:
