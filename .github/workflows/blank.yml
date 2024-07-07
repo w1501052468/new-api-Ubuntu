@@ -25,7 +25,7 @@ jobs:
         sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     - name: Build new-api
       run: |
-        export LATEST_APP=$(wget -qO- https://api.github.com/repos/Calcium-Ion/new-api/tags | gawk -F '["v]' '/name/{print "v"\\\$5;exit}')
+        export LATEST_APP=$(wget -qO- https://api.github.com/repos/Calcium-Ion/new-api/tags | gawk -F '["v]' '/name/{print "v"$5;exit}')
         if [ -z "$LATEST_APP" ]; then
           echo "No tags found, exiting..."
           exit 1
